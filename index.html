@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0f12">
+<title>AppGym — Suivi musculation</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<style>
+/* ====== Thème sombre industriel ====== */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0d0f12; --card:#161a20; --line:#262c35; --txt:#e8e6e3;
+  --mut:#8a919e; --acc:#ff4500; --ok:#3ddc84; --bad:#ff5252;
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--txt);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:16px; padding-bottom:150px;
+}
+header{
+  position:sticky; top:0; z-index:5;
+  background:rgba(13,15,18,.96); border-bottom:1px solid var(--line);
+  padding:14px 16px; display:flex; justify-content:space-between; align-items:baseline;
+}
+h1{font-size:22px; font-weight:900; letter-spacing:3px}
+h1 span{color:var(--acc)}
+#freq{font-size:12px; color:var(--mut); font-weight:700; text-transform:uppercase; letter-spacing:1px}
+main{padding:16px; max-width:560px; margin:0 auto}
+.sec{
+  font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:2px;
+  color:var(--mut); margin:22px 0 10px; border-left:3px solid var(--acc); padding-left:8px;
+}
+.card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:12px}
+.mut{color:var(--mut)}
+.hidden{display:none!important}
+.banner{background:#3a2a00; border:1px solid #7a5800; color:#ffd97a; border-radius:10px; padding:10px 12px; margin-bottom:12px; font-size:14px}
+
+/* ====== Boutons ====== */
+button{font-family:inherit; cursor:pointer}
+.btn{
+  display:block; width:100%; background:var(--acc); color:#fff; border:none;
+  border-radius:12px; padding:16px; font-size:17px; font-weight:800;
+  text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;
+}
+.btn:active{transform:scale(.98)}
+.btn-ghost{background:transparent; border:1px solid var(--line); color:var(--txt)}
+.btn-danger{background:transparent; border:1px solid var(--bad); color:var(--bad)}
+.btn.small{padding:11px; font-size:14px; margin-bottom:0}
+.dup{display:flex; justify-content:space-between; align-items:center; text-align:left}
+.dup small{color:var(--mut); font-weight:600; text-transform:none; letter-spacing:0}
+.chips{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0}
+.chip{
+  background:#0f1216; border:1px solid var(--line); color:var(--txt);
+  border-radius:999px; padding:10px 16px; font-size:15px; font-weight:700;
+}
+.chip:active{border-color:var(--acc); color:var(--acc)}
+
+/* ====== Formulaires ====== */
+input,textarea{
+  background:#0f1216; border:1px solid var(--line); color:var(--txt);
+  border-radius:10px; padding:13px; font-size:16px; width:100%; outline:none;
+}
+input:focus,textarea:focus{border-color:var(--acc)}
+textarea{resize:vertical; min-height:60px}
+label{display:block; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--mut); margin:12px 0 6px}
+
+/* ====== Cartes séance (historique) ====== */
+.seance-card{cursor:pointer}
+.sc-head{display:flex; justify-content:space-between; align-items:baseline}
+.sc-head strong{font-size:18px; font-weight:800; text-transform:uppercase; letter-spacing:1px}
+.sc-head span{color:var(--mut); font-size:14px}
+.sc-sub{color:var(--mut); font-size:13px; margin-top:4px}
+
+/* ====== Vue séance ====== */
+.seance-title{display:flex; align-items:center; gap:10px}
+.seance-title strong{font-size:24px; font-weight:900; text-transform:uppercase; letter-spacing:1px; flex:1}
+.iconbtn{background:none; border:1px solid var(--line); color:var(--mut); border-radius:8px; padding:8px 12px; font-size:15px}
+.exo-head{display:flex; align-items:center; gap:8px; margin-bottom:8px}
+.exo-head strong{flex:1; font-size:17px; font-weight:800}
+.prbadge{background:var(--acc); color:#fff; font-size:11px; font-weight:800; border-radius:6px; padding:3px 7px; letter-spacing:1px}
+.lastline{font-size:13px; color:var(--mut); margin-bottom:10px; line-height:1.5}
+.up{color:var(--ok); font-weight:800}
+.down{color:var(--bad); font-weight:800}
+.eq{color:var(--mut); font-weight:800}
+.serie-row{display:flex; gap:8px; align-items:center; margin-bottom:8px}
+.serie-row .sn{width:22px; text-align:center; color:var(--mut); font-weight:800; font-size:14px}
+.serie-row input{text-align:center; font-size:18px; font-weight:800; padding:11px 2px}
+.serie-row .unit{color:var(--mut); font-size:12px; width:32px}
+.xbtn{background:none; border:none; color:var(--mut); font-size:18px; padding:8px 10px}
+.xbtn:active{color:var(--bad)}
+#exo-sugg{display:flex; flex-direction:column; gap:6px; margin:8px 0}
+#exo-sugg button{
+  background:#0f1216; border:1px solid var(--line); color:var(--txt);
+  border-radius:8px; padding:12px; text-align:left; font-size:15px;
+}
+#exo-sugg button:active{border-color:var(--acc)}
+
+/* ====== Barre chrono de repos ====== */
+#timerbar{
+  position:fixed; bottom:53px; left:0; right:0; z-index:9;
+  background:#101318; border-top:1px solid var(--line);
+  padding:10px 16px; display:flex; gap:10px; align-items:center; justify-content:center;
+}
+#timerbar .tlabel{font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--mut)}
+.tbtn{
+  flex:1; max-width:110px; background:#0f1216; border:1px solid var(--line); color:var(--txt);
+  border-radius:10px; padding:13px 0; font-size:17px; font-weight:800;
+}
+.tbtn:active{border-color:var(--acc)}
+.tbtn.stop{background:var(--bad); border:none; color:#fff; max-width:140px}
+.tleft{font-size:32px; font-weight:900; color:var(--acc); font-variant-numeric:tabular-nums; min-width:110px; text-align:center}
+
+/* ====== Navigation bas d'écran ====== */
+nav#tabs{
+  position:fixed; bottom:0; left:0; right:0; z-index:10; display:flex;
+  background:#101318; border-top:1px solid var(--line);
+}
+nav#tabs button{
+  flex:1; padding:15px 0 max(15px, env(safe-area-inset-bottom));
+  background:none; border:none; color:var(--mut);
+  font-weight:800; text-transform:uppercase; font-size:12px; letter-spacing:1px;
+}
+nav#tabs button.active{color:var(--acc)}
+
+/* ====== Graphique SVG ====== */
+.chart{width:100%; height:auto; display:block}
+.chart .grid{stroke:var(--line); stroke-width:1}
+.chart .line{stroke:var(--acc); stroke-width:2.5; fill:none}
+.chart .dot{fill:var(--acc)}
+.chart .val{fill:var(--txt); font-size:11px; font-weight:700}
+.chart .lab{fill:var(--mut); font-size:10px}
+
+/* ====== Progression ====== */
+.pr-row{display:flex; justify-content:space-between; align-items:center; cursor:pointer}
+.pr-row strong{font-size:16px}
+.pr-row .prval{color:var(--acc); font-weight:900; font-size:18px; white-space:nowrap}
+.pr-row small{display:block; color:var(--mut); font-size:12px}
+
+/* ====== Toast (petit message temporaire) ====== */
+#toast{
+  position:fixed; bottom:120px; left:50%; transform:translateX(-50%);
+  background:#22272f; border:1px solid var(--line); color:var(--txt);
+  border-radius:10px; padding:12px 18px; font-size:14px; font-weight:600;
+  max-width:90%; z-index:20; transition:opacity .3s; opacity:0; pointer-events:none;
+}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>APP<span>GYM</span></h1>
+  <div id="freq"></div>
+</header>
+
+<main id="app"></main>
+
+<div id="timerbar" class="hidden"></div>
+
+<nav id="tabs">
+  <button data-action="nav" data-view="home">Séances</button>
+  <button data-action="nav" data-view="progress">Progression</button>
+  <button data-action="nav" data-view="settings">Réglages</button>
+</nav>
+
+<div id="toast"></div>
+<input type="file" id="importfile" accept=".json,application/json" hidden>
+
+<script>
+'use strict';
+
+/* ============================================================
+   DONNÉES DE BASE
+   ============================================================ */
+
+// Liste d'exercices proposés en autocomplétion (saisie libre possible aussi)
+const EXOS = [
+  'Développé couché','Développé incliné','Développé couché haltères','Développé militaire',
+  'Développé épaules haltères','Élévations latérales','Élévations frontales','Oiseau',
+  'Dips','Pompes','Écarté couché','Écarté à la poulie','Pec deck','Pull-over',
+  'Tractions','Tractions supination','Tirage vertical','Tirage horizontal',
+  'Rowing barre','Rowing haltère','Face pull','Shrugs',
+  'Soulevé de terre','Soulevé de terre jambes tendues','Hip thrust',
+  'Curl biceps barre','Curl biceps haltères','Curl marteau','Curl pupitre',
+  'Extension triceps poulie','Barre au front','Extension triceps haltère',
+  'Squat','Squat gobelet','Front squat','Presse à cuisses','Fentes',
+  'Leg extension','Leg curl','Mollets debout','Mollets assis',
+  'Crunch','Relevés de jambes','Planche','Gainage latéral'
+];
+const NOMS_SEANCE = ['Push','Pull','Jambes','Full Body','Haut du corps','Bras'];
+
+// État global de l'application
+const S = { seances: [], view: 'home', current: null, progressExo: null, offline: false };
+
+/* ============================================================
+   PETITS OUTILS
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+function today() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function fmtDate(iso) { // '2026-06-11' -> '11/06/2026'
+  if (!iso) return '';
+  const [y, m, d] = String(iso).slice(0,10).split('-');
+  return d + '/' + m + '/' + y;
+}
+function fmtDateShort(iso) { // -> '11/06'
+  const [, m, d] = String(iso).slice(0,10).split('-');
+  return d + '/' + m;
+}
+function fmtNum(n) { // 12.5 -> '12,5'
+  return (+n).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+}
+function fmtMMSS(sec) {
+  return Math.floor(sec/60) + ':' + String(sec % 60).padStart(2,'0');
+}
+
+let toastTimer = null;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+/* ============================================================
+   ACCÈS SUPABASE (API REST, sans librairie externe)
+   ============================================================ */
+function cfg() {
+  try { return JSON.parse(localStorage.getItem('appgym_cfg')); } catch (e) { return null; }
+}
+
+async function api(path, opts = {}) {
+  const c = cfg();
+  if (!c || !c.url || !c.key) throw new Error('Supabase non configuré : allez dans Réglages.');
+  const r = await fetch(c.url.replace(/\/+$/, '') + '/rest/v1/' + path, {
+    ...opts,
+    headers: {
+      'apikey': c.key,
+      'Authorization': 'Bearer ' + c.key,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      ...(opts.headers || {})
+    }
+  });
+  if (!r.ok) {
+    const t = await r.text();
+    throw new Error('Erreur Supabase (' + r.status + ') : ' + t.slice(0, 200));
+  }
+  if (r.status === 204) return null;
+  const txt = await r.text();
+  return txt ? JSON.parse(txt) : null;
+}
+
+// Charge toutes les séances (avec exercices et séries imbriqués)
+async function loadAll() {
+  try {
+    const data = await api('seances?select=*,exercices(*,series(*))&order=date.desc,created_at.desc');
+    data.forEach(s => {
+      s.exercices.sort((a, b) => a.position - b.position);
+      s.exercices.forEach(e => e.series.sort((a, b) => a.position - b.position));
+    });
+    S.seances = data;
+    S.offline = false;
+    saveCache();
+  } catch (e) {
+    // Pas de réseau (ou pas configuré) : on affiche la dernière copie locale
+    S.offline = true;
+    try { S.seances = JSON.parse(localStorage.getItem('appgym_cache')) || []; } catch (_) { S.seances = []; }
+    if (cfg()) toast('⚠ Hors-ligne : lecture seule (' + e.message + ')');
+  }
+}
+function saveCache() {
+  try { localStorage.setItem('appgym_cache', JSON.stringify(S.seances)); } catch (e) {}
+}
+
+/* ============================================================
+   AIDES MÉTIER (dernière fois, PR, fréquence…)
+   ============================================================ */
+function sorted() {
+  return S.seances.slice().sort((a, b) =>
+    String(b.date).localeCompare(String(a.date)) ||
+    String(b.created_at || '').localeCompare(String(a.created_at || '')));
+}
+function currentSeance() {
+  return S.seances.find(s => s.id === S.current);
+}
+function lastSeanceByName(nom, excludeId) {
+  return sorted().find(s => norm(s.nom) === norm(nom) && s.id !== excludeId);
+}
+function maxCharge(exo) {
+  return exo.series.length ? Math.max(...exo.series.map(x => +x.charge || 0)) : 0;
+}
+// Dernière séance (avant celle en cours) où cet exercice apparaît
+function lastTimeFor(exName, seance) {
+  const before = sorted().filter(s =>
+    s.id !== seance.id &&
+    (String(s.date) < String(seance.date) ||
+     (String(s.date) === String(seance.date) && String(s.created_at || '') < String(seance.created_at || ''))));
+  for (const s of before) {
+    const e = s.exercices.find(e => norm(e.nom) === norm(exName));
+    if (e && e.series.length) return { seance: s, exo: e };
+  }
+  return null;
+}
+// Record absolu (charge max) pour un exercice, hors séance exclue
+function prFor(exName, excludeSeanceId) {
+  let best = null;
+  for (const s of S.seances) {
+    if (s.id === excludeSeanceId) continue;
+    for (const e of s.exercices) {
+      if (norm(e.nom) !== norm(exName)) continue;
+      const m = maxCharge(e);
+      if (m > 0 && (!best || m > best.val)) best = { val: m, date: s.date };
+    }
+  }
+  return best;
+}
+function freq30() {
+  const limit = new Date();
+  limit.setDate(limit.getDate() - 30);
+  const iso = limit.getFullYear() + '-' + String(limit.getMonth()+1).padStart(2,'0') + '-' + String(limit.getDate()).padStart(2,'0');
+  return S.seances.filter(s => String(s.date) >= iso).length;
+}
+
+/* ============================================================
+   RENDU DES ÉCRANS
+   ============================================================ */
+function render() {
+  $('#freq').textContent = freq30() + ' séance' + (freq30() > 1 ? 's' : '') + ' / 30 j';
+  document.querySelectorAll('nav#tabs button').forEach(b => {
+    const v = b.dataset.view;
+    b.classList.toggle('active', v === S.view || (v === 'home' && S.view === 'seance'));
+  });
+  if (S.view === 'home') renderHome();
+  else if (S.view === 'seance') renderSeance();
+  else if (S.view === 'progress') renderProgress();
+  else renderSettings();
+  renderTimer();
+}
+
+/* ---------- Écran d'accueil : liste des séances ---------- */
+function renderHome() {
+  const seances = sorted();
+  let html = '';
+  if (S.offline) html += `<div class="banner">⚠ Hors-ligne — données en lecture seule</div>`;
+  if (!cfg()) html += `<div class="banner">👋 Bienvenue ! Commencez par configurer Supabase dans l'onglet <b>Réglages</b>.</div>`;
+
+  html += `<button class="btn" data-action="new-open">+ Nouvelle séance</button>`;
+  html += `<div id="newform" class="card hidden">
+    <label>Nom de la séance (tapez ou choisissez)</label>
+    <div class="chips">${NOMS_SEANCE.map(n => `<button class="chip" data-action="chip-create" data-nom="${esc(n)}">${esc(n)}</button>`).join('')}</div>
+    <input id="newnom" placeholder="Ou un nom libre…" autocomplete="off">
+    <label>Date</label>
+    <input id="newdate" type="date" value="${today()}">
+    <div style="height:12px"></div>
+    <button class="btn small" data-action="create-seance">Créer la séance</button>
+  </div>`;
+
+  // Boutons "reprendre" : duplique la dernière séance du même nom en 1 tap
+  const names = [];
+  for (const s of seances) {
+    if (!names.some(n => norm(n) === norm(s.nom))) names.push(s.nom);
+    if (names.length >= 4) break;
+  }
+  if (names.length) {
+    html += `<div class="sec">Reprendre (pré-rempli avec la dernière fois)</div>`;
+    html += names.map(n => {
+      const last = lastSeanceByName(n);
+      return `<button class="btn btn-ghost dup" data-action="dup" data-nom="${esc(n)}">↻ ${esc(n)} <small>dernière : ${fmtDate(last.date)}</small></button>`;
+    }).join('');
+  }
+
+  html += `<div class="sec">Historique</div>`;
+  if (seances.length) {
+    html += seances.map(s => `<div class="card seance-card" data-action="open" data-id="${s.id}">
+      <div class="sc-head"><strong>${esc(s.nom)}</strong><span>${fmtDate(s.date)}</span></div>
+      <div class="sc-sub">${s.exercices.length} exercice${s.exercices.length > 1 ? 's' : ''}${s.note ? ' · 📝 ' + esc(s.note.slice(0, 40)) : ''}</div>
+    </div>`).join('');
+  } else {
+    html += `<p class="mut">Aucune séance pour l'instant. Créez la première !</p>`;
+  }
+  $('#app').innerHTML = html;
+}
+
+/* ---------- Écran séance : logger les séries ---------- */
+function renderSeance() {
+  const s = currentSeance();
+  if (!s) { S.view = 'home'; return renderHome(); }
+
+  let html = `<div class="card">
+    <div class="seance-title">
+      <strong>${esc(s.nom)}</strong>
+      <button class="iconbtn" data-action="rename">✎</button>
+    </div>
+    <label>Date</label>
+    <input type="date" value="${String(s.date).slice(0,10)}" data-change="seance-date">
+    <label>Note (forme du jour, douleurs…)</label>
+    <textarea data-change="seance-note" placeholder="Optionnel…">${esc(s.note || '')}</textarea>
+  </div>`;
+
+  html += s.exercices.map(e => exoCard(e, s)).join('');
+
+  html += `<div class="card">
+    <input id="exo-input" placeholder="Ajouter un exercice…" autocomplete="off">
+    <div id="exo-sugg"></div>
+    <div style="height:10px"></div>
+    <button class="btn btn-ghost small" data-action="add-exo">+ Ajouter cet exercice</button>
+  </div>`;
+
+  html += `<div style="height:8px"></div>
+    <button class="btn btn-ghost" data-action="back-home">← Retour aux séances</button>
+    <button class="btn btn-danger" data-action="del-seance">Supprimer cette séance</button>`;
+
+  $('#app').innerHTML = html;
+  const inp = $('#exo-input');
+  if (inp) inp.addEventListener('input', () => renderSuggestions(inp.value));
+}
+
+function exoCard(e, seance) {
+  const last = lastTimeFor(e.nom, seance);
+  const cur = maxCharge(e);
+
+  // Ligne "dernière fois" + indicateur de progression
+  let lastHtml = '';
+  if (last) {
+    const lm = maxCharge(last.exo);
+    const sers = last.exo.series.map(x => fmtNum(x.charge) + '×' + x.reps).join('&nbsp;&nbsp;');
+    let badge = '';
+    if (e.series.length) {
+      const d = cur - lm;
+      badge = d > 0 ? `<span class="up">▲ +${fmtNum(d)} kg</span>`
+            : d < 0 ? `<span class="down">▼ ${fmtNum(d)} kg</span>`
+            : `<span class="eq">= idem</span>`;
+    }
+    lastHtml = `<div class="lastline">Dernière fois (${fmtDate(last.seance.date)}) : ${sers} ${badge}</div>`;
+  } else {
+    lastHtml = `<div class="lastline">Première fois sur cet exercice 💪</div>`;
+  }
+
+  // Badge PR si on dépasse le record absolu
+  const pr = prFor(e.nom, seance.id);
+  const prHtml = (e.series.length && cur > 0 && (!pr || cur > pr.val)) ? `<span class="prbadge">🏆 PR !</span>` : '';
+
+  const rows = e.series.map((x, i) => `<div class="serie-row">
+    <span class="sn">${i + 1}</span>
+    <input type="number" inputmode="decimal" step="0.5" min="0" value="${+x.charge}" data-change="serie" data-id="${x.id}" data-f="charge"><span class="unit">kg</span>
+    <input type="number" inputmode="numeric" step="1" min="0" value="${+x.reps}" data-change="serie" data-id="${x.id}" data-f="reps"><span class="unit">reps</span>
+    <button class="xbtn" data-action="del-serie" data-id="${x.id}">✕</button>
+  </div>`).join('');
+
+  return `<div class="card">
+    <div class="exo-head"><strong>${esc(e.nom)}</strong>${prHtml}<button class="xbtn" data-action="del-exo" data-id="${e.id}">✕</button></div>
+    ${lastHtml}
+    ${rows}
+    <button class="btn btn-ghost small" data-action="add-serie" data-id="${e.id}">+ Série</button>
+  </div>`;
+}
+
+function renderSuggestions(q) {
+  const box = $('#exo-sugg');
+  if (!box) return;
+  q = norm(q.trim());
+  if (!q) { box.innerHTML = ''; return; }
+  const found = EXOS.filter(e => norm(e).includes(q)).slice(0, 6);
+  box.innerHTML = found.map(e => `<button data-action="pick-exo" data-nom="${esc(e)}">${esc(e)}</button>`).join('');
+}
+
+/* ---------- Écran progression : PR + graphique ---------- */
+function renderProgress() {
+  if (S.progressExo) return renderExoDetail();
+
+  // Tous les exercices distincts, avec leur record
+  const map = new Map();
+  for (const s of S.seances) {
+    for (const e of s.exercices) {
+      const k = norm(e.nom);
+      const m = maxCharge(e);
+      const cur = map.get(k);
+      if (!cur) map.set(k, { nom: e.nom, pr: m, date: s.date, count: 1 });
+      else {
+        cur.count++;
+        if (m > cur.pr) { cur.pr = m; cur.date = s.date; }
+      }
+    }
+  }
+  const items = [...map.values()].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+
+  let html = `<div class="sec">Records personnels (charge max)</div>`;
+  if (!items.length) {
+    html += `<p class="mut">Loggez des séries pour voir vos records ici.</p>`;
+  } else {
+    html += items.map(i => `<div class="card pr-row" data-action="show-exo" data-nom="${esc(i.nom)}">
+      <div><strong>${esc(i.nom)}</strong><small>${i.count} séance${i.count > 1 ? 's' : ''}</small></div>
+      <div class="prval">${i.pr > 0 ? fmtNum(i.pr) + ' kg' : '—'}</div>
+    </div>`).join('');
+  }
+  $('#app').innerHTML = html;
+}
+
+function renderExoDetail() {
+  const name = S.progressExo;
+  // Charge max par séance contenant cet exercice, ordre chronologique, 10 dernières
+  const pts = sorted()
+    .map(s => {
+      const e = s.exercices.find(e => norm(e.nom) === norm(name));
+      return e ? { date: s.date, val: maxCharge(e) } : null;
+    })
+    .filter(p => p && p.val > 0)
+    .reverse()
+    .slice(-10);
+
+  const pr = prFor(name, null);
+  let html = `<button class="btn btn-ghost" data-action="back-progress">← Tous les exercices</button>
+    <div class="card">
+      <div class="exo-head"><strong>${esc(name)}</strong></div>
+      <div class="lastline">Record : <span class="up">${pr ? fmtNum(pr.val) + ' kg' : '—'}</span>${pr ? ' (le ' + fmtDate(pr.date) + ')' : ''}</div>
+      ${pts.length ? svgChart(pts) : '<p class="mut">Pas encore de données à tracer.</p>'}
+      ${pts.length ? '<p class="mut" style="font-size:12px;margin-top:8px">Charge max (kg) sur les ' + pts.length + ' dernières séances</p>' : ''}
+    </div>`;
+  $('#app').innerHTML = html;
+}
+
+// Graphique en SVG pur, sans librairie
+function svgChart(pts) {
+  const W = 340, H = 200, L = 40, R = 14, T = 26, B = 30;
+  const vals = pts.map(p => p.val);
+  let mn = Math.min(...vals), mx = Math.max(...vals);
+  if (mn === mx) { mn = Math.max(0, mn - 5); mx = mx + 5; }
+  const X = i => pts.length === 1 ? L + (W - L - R) / 2 : L + i * (W - L - R) / (pts.length - 1);
+  const Y = v => T + (H - T - B) * (1 - (v - mn) / (mx - mn));
+
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="chart" xmlns="http://www.w3.org/2000/svg">`;
+  for (const v of [mn, (mn + mx) / 2, mx]) {
+    s += `<line x1="${L}" y1="${Y(v)}" x2="${W - R}" y2="${Y(v)}" class="grid"/>`;
+    s += `<text x="${L - 5}" y="${Y(v) + 4}" class="lab" text-anchor="end">${fmtNum(Math.round(v * 2) / 2)}</text>`;
+  }
+  if (pts.length > 1) {
+    s += `<polyline points="${pts.map((p, i) => X(i) + ',' + Y(p.val)).join(' ')}" class="line"/>`;
+  }
+  pts.forEach((p, i) => {
+    s += `<circle cx="${X(i)}" cy="${Y(p.val)}" r="4" class="dot"/>`;
+    s += `<text x="${X(i)}" y="${Y(p.val) - 9}" class="val" text-anchor="middle">${fmtNum(p.val)}</text>`;
+  });
+  const li = [0];
+  if (pts.length > 2) li.push(Math.floor((pts.length - 1) / 2));
+  if (pts.length > 1) li.push(pts.length - 1);
+  for (const i of li) {
+    s += `<text x="${X(i)}" y="${H - 8}" class="lab" text-anchor="middle">${fmtDateShort(pts[i].date)}</text>`;
+  }
+  return s + '</svg>';
+}
+
+/* ---------- Écran réglages ---------- */
+function renderSettings() {
+  const c = cfg() || { url: '', key: '' };
+  $('#app').innerHTML = `
+    <div class="sec">Connexion Supabase</div>
+    <div class="card">
+      <p class="mut" style="font-size:13px;line-height:1.5">Dans votre projet Supabase : <b>Settings → API</b>. Copiez l'« URL » du projet et la clé « anon public ». Elles sont stockées uniquement sur cet appareil.</p>
+      <label>URL du projet</label>
+      <input id="cfg-url" placeholder="https://xxxx.supabase.co" value="${esc(c.url)}" autocomplete="off">
+      <label>Clé anon (publique)</label>
+      <input id="cfg-key" type="password" placeholder="eyJhbGciOi…" value="${esc(c.key)}" autocomplete="off">
+      <div style="height:12px"></div>
+      <button class="btn small" data-action="save-cfg">Enregistrer et tester</button>
+    </div>
+    <div class="sec">Sauvegarde</div>
+    <div class="card">
+      <button class="btn btn-ghost small" data-action="export" style="margin-bottom:10px">⬇ Exporter en JSON</button>
+      <button class="btn btn-ghost small" data-action="import-open">⬆ Importer un JSON (remplace tout)</button>
+    </div>
+    <div class="sec">À propos</div>
+    <div class="card mut" style="font-size:13px;line-height:1.6">
+      AppGym — suivi de musculation personnel.<br>
+      Le script de création des tables est dans le fichier <b>supabase.sql</b> du dépôt GitHub.<br>
+      Astuce : sur mobile, menu du navigateur → « Ajouter à l'écran d'accueil » pour installer l'app.
+    </div>`;
+}
+
+/* ============================================================
+   ACTIONS (clics)
+   ============================================================ */
+document.addEventListener('click', async e => {
+  const t = e.target.closest('[data-action]');
+  if (!t) return;
+  const d = t.dataset;
+  try {
+    switch (d.action) {
+      case 'nav':
+        S.view = d.view; S.progressExo = null;
+        if (d.view === 'home') await loadAll();
+        render(); window.scrollTo(0, 0); break;
+
+      case 'new-open':
+        $('#newform').classList.toggle('hidden'); break;
+
+      case 'chip-create':
+        await createSeance(d.nom, $('#newdate').value || today()); break;
+
+      case 'create-seance': {
+        const nom = $('#newnom').value.trim();
+        if (!nom) return toast('Donnez un nom à la séance (ou tapez sur un bouton).');
+        await createSeance(nom, $('#newdate').value || today()); break;
+      }
+
+      case 'dup': await duplicateSeance(d.nom); break;
+
+      case 'open':
+        S.current = d.id; S.view = 'seance'; render(); window.scrollTo(0, 0); break;
+
+      case 'back-home':
+        S.view = 'home'; render(); window.scrollTo(0, 0); break;
+
+      case 'rename': {
+        const s = currentSeance();
+        const nom = prompt('Nom de la séance :', s.nom);
+        if (nom && nom.trim()) {
+          await api('seances?id=eq.' + s.id, { method: 'PATCH', body: JSON.stringify({ nom: nom.trim() }) });
+          s.nom = nom.trim(); saveCache(); render();
+        }
+        break;
+      }
+
+      case 'del-seance': {
+        const s = currentSeance();
+        if (!confirm('Supprimer la séance « ' + s.nom + ' » du ' + fmtDate(s.date) + ' ?\nCette action est définitive.')) return;
+        await api('seances?id=eq.' + s.id, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+        S.seances = S.seances.filter(x => x.id !== s.id);
+        saveCache(); S.view = 'home'; render(); toast('Séance supprimée.');
+        break;
+      }
+
+      case 'pick-exo': await addExo(d.nom); break;
+
+      case 'add-exo': {
+        const nom = $('#exo-input').value.trim();
+        if (!nom) return toast("Tapez le nom de l'exercice.");
+        await addExo(nom); break;
+      }
+
+      case 'del-exo': {
+        if (!confirm('Supprimer cet exercice et ses séries ?')) return;
+        await api('exercices?id=eq.' + d.id, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+        const s = currentSeance();
+        s.exercices = s.exercices.filter(x => x.id !== d.id);
+        saveCache(); render(); break;
+      }
+
+      case 'add-serie': await addSerie(d.id); break;
+
+      case 'del-serie': {
+        await api('series?id=eq.' + d.id, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+        const s = currentSeance();
+        s.exercices.forEach(ex => ex.series = ex.series.filter(x => x.id !== d.id));
+        saveCache(); render(); break;
+      }
+
+      case 'show-exo': S.progressExo = d.nom; render(); window.scrollTo(0, 0); break;
+      case 'back-progress': S.progressExo = null; render(); break;
+
+      case 't-start': startTimer(+d.s); break;
+      case 't-stop': stopTimer(); break;
+
+      case 'save-cfg': {
+        const url = $('#cfg-url').value.trim(), key = $('#cfg-key').value.trim();
+        if (!url || !key) return toast('Remplissez les deux champs.');
+        localStorage.setItem('appgym_cfg', JSON.stringify({ url, key }));
+        toast('Test de connexion…');
+        await api('seances?select=id&limit=1');
+        toast('✅ Connexion Supabase OK !');
+        await loadAll(); render();
+        break;
+      }
+
+      case 'export': exportJSON(); break;
+      case 'import-open': $('#importfile').click(); break;
+    }
+  } catch (err) {
+    toast('❌ ' + err.message);
+  }
+});
+
+/* ============================================================
+   ACTIONS (changements de valeurs)
+   ============================================================ */
+document.addEventListener('change', async e => {
+  const t = e.target.closest('[data-change]');
+  if (!t) return;
+  try {
+    const s = currentSeance();
+    if (t.dataset.change === 'seance-date') {
+      await api('seances?id=eq.' + s.id, { method: 'PATCH', body: JSON.stringify({ date: t.value }) });
+      s.date = t.value; saveCache(); render();
+    } else if (t.dataset.change === 'seance-note') {
+      await api('seances?id=eq.' + s.id, { method: 'PATCH', body: JSON.stringify({ note: t.value || null }) });
+      s.note = t.value; saveCache();
+    } else if (t.dataset.change === 'serie') {
+      const f = t.dataset.f;
+      const val = f === 'reps' ? Math.max(0, parseInt(t.value, 10) || 0) : Math.max(0, parseFloat(t.value) || 0);
+      await api('series?id=eq.' + t.dataset.id, { method: 'PATCH', body: JSON.stringify({ [f]: val }) });
+      s.exercices.forEach(ex => ex.series.forEach(x => { if (x.id === t.dataset.id) x[f] = val; }));
+      saveCache(); render(); // re-rend pour mettre à jour badges PR et +/-
+    }
+  } catch (err) {
+    toast('❌ ' + err.message);
+  }
+});
+
+// Import JSON
+$('#importfile').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    await importAll(data);
+  } catch (err) {
+    toast('❌ Import impossible : ' + err.message);
+  }
+});
+
+/* ============================================================
+   LOGIQUE MÉTIER
+   ============================================================ */
+async function createSeance(nom, date) {
+  const [row] = await api('seances', { method: 'POST', body: JSON.stringify([{ nom, date }]) });
+  row.exercices = [];
+  S.seances.unshift(row);
+  saveCache();
+  S.current = row.id; S.view = 'seance'; render(); window.scrollTo(0, 0);
+}
+
+// Duplique la dernière séance portant ce nom : mêmes exercices, mêmes charges
+async function duplicateSeance(nom) {
+  const src = lastSeanceByName(nom);
+  if (!src) return toast('Aucune séance « ' + nom + ' » à reprendre.');
+  toast('Préparation de la séance…');
+  const [ns] = await api('seances', { method: 'POST', body: JSON.stringify([{ nom: src.nom, date: today() }]) });
+  ns.exercices = [];
+  if (src.exercices.length) {
+    const exRows = src.exercices.map((e, i) => ({ seance_id: ns.id, nom: e.nom, position: i }));
+    const newExos = await api('exercices', { method: 'POST', body: JSON.stringify(exRows) });
+    const serRows = [];
+    src.exercices.forEach((e, i) => e.series.forEach((x, j) =>
+      serRows.push({ exercice_id: newExos[i].id, reps: x.reps, charge: x.charge, position: j })));
+    const newSers = serRows.length ? await api('series', { method: 'POST', body: JSON.stringify(serRows) }) : [];
+    newExos.forEach(ex => {
+      ex.series = newSers.filter(x => x.exercice_id === ex.id).sort((a, b) => a.position - b.position);
+    });
+    ns.exercices = newExos;
+  }
+  S.seances.unshift(ns);
+  saveCache();
+  S.current = ns.id; S.view = 'seance'; render(); window.scrollTo(0, 0);
+}
+
+async function addExo(nom) {
+  const s = currentSeance();
+  const [row] = await api('exercices', {
+    method: 'POST',
+    body: JSON.stringify([{ seance_id: s.id, nom, position: s.exercices.length }])
+  });
+  row.series = [];
+  s.exercices.push(row);
+  saveCache(); render();
+}
+
+async function addSerie(exoId) {
+  const s = currentSeance();
+  const exo = s.exercices.find(e => e.id === exoId);
+  // Pré-remplissage malin : la série correspondante de la dernière fois,
+  // sinon la série précédente de cet exercice, sinon des valeurs par défaut
+  const last = lastTimeFor(exo.nom, s);
+  const base = (last && last.exo.series[exo.series.length]) ||
+               exo.series[exo.series.length - 1] ||
+               (last && last.exo.series[last.exo.series.length - 1]) ||
+               { reps: 10, charge: 0 };
+  const [row] = await api('series', {
+    method: 'POST',
+    body: JSON.stringify([{ exercice_id: exoId, reps: +base.reps || 0, charge: +base.charge || 0, position: exo.series.length }])
+  });
+  exo.series.push(row);
+  saveCache(); render();
+}
+
+/* ============================================================
+   EXPORT / IMPORT JSON
+   ============================================================ */
+function exportJSON() {
+  const blob = new Blob(
+    [JSON.stringify({ app: 'appgym', version: 1, exporte_le: new Date().toISOString(), seances: S.seances }, null, 2)],
+    { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'appgym-export-' + today() + '.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  toast('Export téléchargé.');
+}
+
+async function importAll(data) {
+  const seances = Array.isArray(data) ? data : data.seances;
+  if (!Array.isArray(seances)) throw new Error('format de fichier non reconnu');
+  if (!confirm('Importer ' + seances.length + ' séance(s) ?\n⚠ ATTENTION : toutes les données actuelles seront REMPLACÉES.')) return;
+
+  // 1. On vide tout
+  await api('seances?id=not.is.null', { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+
+  if (seances.length) {
+    // 2. Séances (l'ordre de la réponse correspond à l'ordre envoyé)
+    const sRows = seances.map(s => ({
+      nom: s.nom, date: String(s.date).slice(0, 10), note: s.note || null,
+      created_at: s.created_at || new Date().toISOString()
+    }));
+    const newS = await api('seances', { method: 'POST', body: JSON.stringify(sRows) });
+
+    // 3. Exercices
+    const exRows = [], exRef = [];
+    seances.forEach((s, i) => (s.exercices || []).forEach((e, j) => {
+      exRows.push({ seance_id: newS[i].id, nom: e.nom, position: e.position ?? j });
+      exRef.push(e);
+    }));
+    const newE = exRows.length ? await api('exercices', { method: 'POST', body: JSON.stringify(exRows) }) : [];
+
+    // 4. Séries
+    const serRows = [];
+    exRef.forEach((e, i) => (e.series || []).forEach((x, j) =>
+      serRows.push({ exercice_id: newE[i].id, reps: +x.reps || 0, charge: +x.charge || 0, position: x.position ?? j })));
+    if (serRows.length) await api('series', { method: 'POST', body: JSON.stringify(serRows) });
+  }
+
+  await loadAll();
+  S.view = 'home'; render();
+  toast('✅ Import terminé !');
+}
+
+/* ============================================================
+   CHRONO DE REPOS
+   ============================================================ */
+const timer = { end: 0, iv: null };
+
+function startTimer(sec) {
+  timer.end = Date.now() + sec * 1000;
+  clearInterval(timer.iv);
+  timer.iv = setInterval(tickTimer, 250);
+  renderTimer();
+}
+function stopTimer() {
+  clearInterval(timer.iv);
+  timer.iv = null;
+  renderTimer();
+}
+function tickTimer() {
+  const left = Math.ceil((timer.end - Date.now()) / 1000);
+  if (left <= 0) {
+    stopTimer();
+    beep();
+    toast('⏰ Repos terminé, à toi de jouer !');
+  } else {
+    const el = $('#timerbar .tleft');
+    if (el) el.textContent = fmtMMSS(left);
+    else renderTimer();
+  }
+}
+function renderTimer() {
+  const bar = $('#timerbar');
+  const show = S.view === 'seance' || timer.iv;
+  bar.classList.toggle('hidden', !show);
+  if (!show) return;
+  if (timer.iv) {
+    const left = Math.max(0, Math.ceil((timer.end - Date.now()) / 1000));
+    bar.innerHTML = `<span class="tleft">${fmtMMSS(left)}</span><button class="tbtn stop" data-action="t-stop">Stop</button>`;
+  } else {
+    bar.innerHTML = `<span class="tlabel">Repos</span>
+      <button class="tbtn" data-action="t-start" data-s="90">1:30</button>
+      <button class="tbtn" data-action="t-start" data-s="120">2:00</button>
+      <button class="tbtn" data-action="t-start" data-s="180">3:00</button>`;
+  }
+}
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.35, 0.7].forEach(dt => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.25, ctx.currentTime + dt);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dt + 0.25);
+      o.start(ctx.currentTime + dt);
+      o.stop(ctx.currentTime + dt + 0.3);
+    });
+  } catch (e) {}
+  if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 500]);
+}
+
+/* ============================================================
+   DÉMARRAGE
+   ============================================================ */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+(async function init() {
+  if (!cfg()) {
+    S.view = 'settings';
+    render();
+    toast('👋 Configurez d\'abord Supabase (URL + clé anon).');
+  } else {
+    $('#app').innerHTML = '<p class="mut">Chargement…</p>';
+    await loadAll();
+    render();
+  }
+})();
+</script>
+</body>
+</html>
